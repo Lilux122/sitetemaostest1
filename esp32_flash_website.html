@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="ru" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Temaos Web Flasher - Установите ОС на ваш ESP32</title>
+    <meta name="description" content="Установите многозадачную операционную систему Temaos 3.0 на ваше устройство ESP32 прямо из браузера.">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+
+    <!-- ESP Web Tools Component -->
+    <script type="module" src="https://unpkg.com/esp-web-tools@9.4.3/dist/web/install-button.js?module"></script>
+
+    <style>
+        /* Основной стиль для темной темы */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0D1117; /* GitHub Dark Background */
+            color: #C9D1D9; /* GitHub Dark Text */
+        }
+
+        /* Стиль акцентного цвета */
+        :root {
+            --accent-color: #38bdf8; /* sky-400 */
+        }
+
+        /* Анимация плавного появления */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+        }
+
+        .fade-in-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Стили для логов и прогресс-бара */
+        #logs-container {
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 16px;
+            background-color: #010409;
+        }
+
+        #progress-bar-container {
+            width: 100%;
+            background-color: #30363d;
+            border-radius: 8px;
+            overflow: hidden;
+            height: 20px;
+        }
+
+        #progress-bar {
+            width: 0%;
+            background-color: var(--accent-color);
+            transition: width 0.3s ease-in-out;
+            height: 100%;
+        }
+
+        /* Стиль для активного пункта меню */
+        .nav-link.active {
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Шапка сайта -->
+    <header class="bg-gray-900/50 backdrop-blur-sm fixed w-full top-0 z-50 border-b border-gray-800">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="#home" class="text-2xl font-bold text-white tracking-wider">Tema<span class="text-sky-400">os</span></a>
+            <nav class="hidden md:flex space-x-8">
+                <a href="#flasher" class="nav-link text-gray-300 hover:text-sky-400 transition-colors duration-300">Прошить</a>
+                <a href="#about" class="nav-link text-gray-300 hover:text-sky-400 transition-colors duration-300">Возможности</a>
+                <a href="#instructions" class="nav-link text-gray-300 hover:text-sky-400 transition-colors duration-300">Инструкция</a>
+                <a href="#requirements" class="nav-link text-gray-300 hover:text-sky-400 transition-colors duration-300">Требования</a>
+                <a href="#faq" class="nav-link text-gray-300 hover:text-sky-400 transition-colors duration-300">FAQ</a>
+            </nav>
+            <button id="mobile-menu-button" class="md:hidden text-white p-2 rounded-md hover:bg-gray-700"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" /></svg></button>
+        </div>
+        <div id="mobile-menu" class="hidden md:hidden px-6 pb-4">
+            <a href="#flasher" class="nav-link block py-2 text-gray-300 hover:text-sky-400">Прошить</a>
+            <a href="#about" class="nav-link block py-2 text-gray-300 hover:text-sky-400">Возможности</a>
+            <a href="#instructions" class="nav-link block py-2 text-gray-300 hover:text-sky-400">Инструкция</a>
+            <a href="#requirements" class="nav-link block py-2 text-gray-300 hover:text-sky-400">Требования</a>
+            <a href="#faq" class="nav-link block py-2 text-gray-300 hover:text-sky-400">FAQ</a>
+        </div>
+    </header>
+
+    <main>
+        <!-- Главный экран -->
+        <section id="home" class="min-h-screen flex items-center justify-center bg-grid-gray-700/[0.2] pt-20">
+            <div class="text-center container mx-auto px-6 fade-in">
+                <h1 class="text-4xl md:text-6xl font-extrabold text-white leading-tight mb-4">
+                    Полноценная ОС для вашего <span class="text-sky-400">ESP32</span>
+                </h1>
+                <p class="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto mb-8">
+                    Temaos 3.0 — это многозадачная операционная система на базе ESP-IDF с веб-интерфейсом, поддержкой MQTT, Telnet, файловой системой и драйверами для популярных сенсоров и модулей.
+                </p>
+                <a href="#flasher" class="bg-sky-500 hover:bg-sky-600 text-white font-bold py-4 px-10 rounded-lg text-lg transition-all duration-300 transform hover:scale-105 shadow-lg shadow-sky-500/20">
+                    Установить Temaos
+                </a>
+            </div>
+        </section>
+
+        <!-- Секция прошивки -->
+        <section id="flasher" class="py-20 md:py-32 bg-gray-900">
+            <div class="container mx-auto px-6 text-center">
+                <div class="max-w-4xl mx-auto fade-in">
+                    <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">Установка Temaos 3.0</h2>
+                    <p class="text-gray-400 mb-8">Подключите ваше ESP32 устройство к компьютеру через USB и нажмите кнопку ниже, чтобы начать.</p>
+                    <div id="compatibility-check" class="mb-6"></div>
+                    <esp-web-install-button id="flasher-button">
+                        <button slot="activate" class="bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-10 rounded-lg text-lg transition-all duration-300 transform hover:scale-105 shadow-lg shadow-green-600/20 disabled:opacity-50 disabled:cursor-not-allowed">
+                             <svg xmlns="http://www.w3.org/2000/svg" class="inline-block h-6 w-6 mr-2 -mt-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                            Подключить и прошить
+                        </button>
+                    </esp-web-install-button>
+                    <div id="flash-status" class="mt-8 text-left hidden">
+                        <div class="flex justify-between items-center mb-4">
+                             <h3 class="text-2xl font-semibold text-white">Статус прошивки</h3>
+                             <p id="status-label" class="text-lg font-medium text-gray-400"></p>
+                        </div>
+                        <div id="progress-bar-container" class="mb-4"><div id="progress-bar"></div></div>
+                        <h4 class="text-xl font-semibold text-white mb-2">Логи:</h4>
+                        <div id="logs-container"></div>
+                    </div>
+                    <div id="notification" class="fixed bottom-5 right-5 p-4 rounded-lg text-white transition-opacity duration-300 opacity-0 pointer-events-none"><p id="notification-message"></p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Секция "О прошивке" -->
+        <section id="about" class="py-20 md:py-32">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12 fade-in">
+                    <h2 class="text-3xl md:text-4xl font-bold text-white">Раскройте потенциал ESP32 с <span class="text-sky-400">Temaos</span></h2>
+                    <p class="text-gray-400 mt-4 max-w-3xl mx-auto">Temaos предоставляет мощные инструменты для создания IoT-проектов любой сложности.</p>
+                </div>
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <!-- Feature 1 -->
+                    <div class="bg-gray-900 p-8 rounded-xl border border-gray-800 transform hover:-translate-y-2 transition-transform duration-300 fade-in">
+                        <h3 class="text-xl font-bold text-white mb-2">Веб-интерфейс и File Manager</h3>
+                        <p class="text-gray-400">Управляйте файлами, настраивайте систему и следите за состоянием устройства через удобный веб-интерфейс.</p>
+                    </div>
+                    <!-- Feature 2 -->
+                    <div class="bg-gray-900 p-8 rounded-xl border border-gray-800 transform hover:-translate-y-2 transition-transform duration-300 fade-in" style="transition-delay: 100ms;">
+                        <h3 class="text-xl font-bold text-white mb-2">Telnet и командная строка</h3>
+                        <p class="text-gray-400">Получите полный контроль над системой через Telnet-сервер с доступом к мощной командной строке.</p>
+                    </div>
+                    <!-- Feature 3 -->
+                    <div class="bg-gray-900 p-8 rounded-xl border border-gray-800 transform hover:-translate-y-2 transition-transform duration-300 fade-in" style="transition-delay: 200ms;">
+                        <h3 class="text-xl font-bold text-white mb-2">Поддержка MQTT</h3>
+                        <p class="text-gray-400">Интегрируйте ваше устройство в экосистему умного дома и обменивайтесь данными с другими устройствами по протоколу MQTT.</p>
+                    </div>
+                    <!-- Feature 4 -->
+                    <div class="bg-gray-900 p-8 rounded-xl border border-gray-800 transform hover:-translate-y-2 transition-transform duration-300 fade-in" style="transition-delay: 300ms;">
+                        <h3 class="text-xl font-bold text-white mb-2">Драйверы для сенсоров</h3>
+                        <p class="text-gray-400">Встроенная поддержка BME280, DS18B20, DHT11/22, MAX31855 (K-Type) и других датчиков для быстрого старта.</p>
+                    </div>
+                    <!-- Feature 5 -->
+                    <div class="bg-gray-900 p-8 rounded-xl border border-gray-800 transform hover:-translate-y-2 transition-transform duration-300 fade-in" style="transition-delay: 400ms;">
+                        <h3 class="text-xl font-bold text-white mb-2">Управление RGB-лентами</h3>
+                        <p class="text-gray-400">Управляйте адресными светодиодными лентами (WS2812/NeoPixel) для создания эффектных световых инсталляций.</p>
+                    </div>
+                    <!-- Feature 6 -->
+                    <div class="bg-gray-900 p-8 rounded-xl border border-gray-800 transform hover:-translate-y-2 transition-transform duration-300 fade-in" style="transition-delay: 500ms;">
+                        <h3 class="text-xl font-bold text-white mb-2">Режим Wi-Fi модема</h3>
+                        <p class="text-gray-400">Используйте ESP32 как модем для раздачи интернета другим устройствам, подключенным к его UART-порту.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Инструкция -->
+        <section id="instructions" class="py-20 md:py-32 bg-gray-900">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12 fade-in">
+                    <h2 class="text-3xl md:text-4xl font-bold text-white">Как прошить: 3 простых шага</h2>
+                </div>
+                <div class="max-w-3xl mx-auto space-y-8 relative">
+                    <div class="absolute left-4 top-4 bottom-4 w-0.5 bg-gray-700 hidden md:block" aria-hidden="true"></div>
+                    <div class="flex items-start space-x-6 fade-in">
+                        <div class="bg-sky-500 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold flex-shrink-0 z-10">1</div>
+                        <div>
+                            <h3 class="text-xl font-bold text-white mb-1">Подключите ESP32</h3>
+                            <p class="text-gray-400">Соедините вашу плату ESP32 с компьютером с помощью кабеля USB, который поддерживает передачу данных.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start space-x-6 fade-in" style="transition-delay: 100ms;">
+                        <div class="bg-sky-500 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold flex-shrink-0 z-10">2</div>
+                        <div>
+                            <h3 class="text-xl font-bold text-white mb-1">Нажмите "Прошить"</h3>
+                            <p class="text-gray-400">Нажмите на кнопку "Подключить и прошить". В появившемся окне выберите COM-порт вашего устройства.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start space-x-6 fade-in" style="transition-delay: 200ms;">
+                        <div class="bg-sky-500 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold flex-shrink-0 z-10">3</div>
+                        <div>
+                            <h3 class="text-xl font-bold text-white mb-1">Дождитесь завершения</h3>
+                            <p class="text-gray-400">Процесс займет несколько минут. Не отключайте устройство до появления уведомления об успешном завершении.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Требования и FAQ -->
+        <section id="requirements" class="py-20 md:py-32">
+            <div class="container mx-auto px-6">
+                 <div class="grid md:grid-cols-2 gap-16">
+                    <div class="fade-in">
+                        <h2 class="text-3xl font-bold text-white mb-6">Системные требования</h2>
+                        <ul class="space-y-4 list-none">
+                            <li><h3 class="text-xl font-semibold text-sky-400">Браузер</h3><p class="text-gray-400">Google Chrome, Microsoft Edge или другой браузер на основе Chromium с поддержкой Web Serial API.</p></li>
+                            <li><h3 class="text-xl font-semibold text-sky-400">Плата</h3><p class="text-gray-400">Любая плата на базе ESP32 с 4 МБ флеш-памяти (например, ESP32-DevKitC, NodeMCU-32S).</p></li>
+                             <li><h3 class="text-xl font-semibold text-sky-400">Драйверы</h3><p class="text-gray-400">Может потребоваться установка драйвера CP210x или CH340, в зависимости от чипа на вашей плате.</p></li>
+                        </ul>
+                    </div>
+                    <div id="faq" class="fade-in" style="transition-delay: 100ms;">
+                         <h2 class="text-3xl font-bold text-white mb-6">Частые вопросы (FAQ)</h2>
+                         <dl class="space-y-6">
+                            <div><dt class="text-lg font-semibold text-white">Мое устройство не определяется. Что делать?</dt><dd class="text-gray-400 mt-1">Проверьте USB-кабель (он должен поддерживать данные), попробуйте другой USB-порт и убедитесь, что установлены необходимые драйверы (CP210x/CH340).</dd></div>
+                             <div><dt class="text-lg font-semibold text-white">Прошивка завершилась с ошибкой.</dt><dd class="text-gray-400 mt-1">Попробуйте зажать кнопку "BOOT" на плате перед началом прошивки. Также проверьте логи на наличие сообщений об ошибках.</dd></div>
+                             <div><dt class="text-lg font-semibold text-white">Можно ли вернуться к старой прошивке?</dt><dd class="text-gray-400 mt-1">Да, вы всегда можете прошить ваше устройство любой другой прошивкой с помощью стандартных утилит, например, esptool.py.</dd></div>
+                         </dl>
+                    </div>
+                 </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Подвал -->
+    <footer class="bg-gray-900 border-t border-gray-800">
+        <div class="container mx-auto px-6 py-8 text-center text-gray-400">
+            <p>&copy; 2024 Temaos Web Flasher. Проект создан с ❤️ для сообщества ESP32.</p>
+            <p class="mt-2 text-sm">Оригинальный репозиторий проекта Temaos 3.0:
+                <a href="https://github.com/Lilux122/Temaos3.0" target="_blank" rel="noopener noreferrer" class="text-sky-400 hover:underline">
+                    GitHub
+                </a>.
+            </p>
+        </div>
+    </footer>
+
+
+    <script type="module">
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DOM-элементы ---
+            const flasherButton = document.getElementById('flasher-button');
+            const flashStatus = document.getElementById('flash-status');
+            const logsContainer = document.getElementById('logs-container');
+            const progressBar = document.getElementById('progress-bar');
+            const statusLabel = document.getElementById('status-label');
+            const notification = document.getElementById('notification');
+            const notificationMessage = document.getElementById('notification-message');
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+
+            // --- КОНФИГУРАЦИЯ ---
+            flasherButton.manifest = "manifest.json";
+
+            // --- UI-функции ---
+            const log = (message) => {
+                const timestamp = new Date().toLocaleTimeString();
+                logsContainer.textContent += `[${timestamp}] ${message}\n`;
+                logsContainer.scrollTop = logsContainer.scrollHeight;
+            };
+            const showNotification = (message, isError = false) => {
+                notificationMessage.textContent = message;
+                notification.className = `fixed bottom-5 right-5 p-4 rounded-lg text-white transition-all duration-300 opacity-100 ${isError ? 'bg-red-600' : 'bg-green-600'}`;
+                setTimeout(() => { notification.classList.add('opacity-0'); }, 5000);
+            };
+
+            // --- События ESP Web Tools ---
+            flasherButton.addEventListener('connected', () => {
+                log('Устройство подключено. Начинается процесс прошивки...');
+                flashStatus.classList.remove('hidden');
+            });
+            flasherButton.addEventListener('error', (e) => {
+                log(`Ошибка: ${e.detail.message}`);
+                statusLabel.textContent = 'Ошибка';
+                statusLabel.className = 'text-lg font-medium text-red-400';
+                showNotification(`Произошла ошибка: ${e.detail.message}`, true);
+            });
+            flasherButton.addEventListener('flash-progress', (e) => {
+                progressBar.style.width = `${e.detail.percentage}%`;
+                statusLabel.textContent = `Прошивка... ${e.detail.percentage}%`;
+                statusLabel.className = 'text-lg font-medium text-sky-400';
+            });
+             flasherButton.addEventListener('finished', () => {
+                progressBar.style.width = '100%';
+                statusLabel.textContent = 'Завершено!';
+                statusLabel.className = 'text-lg font-medium text-green-400';
+                log('Прошивка успешно завершена!');
+                showNotification('Прошивка успешно завершена!', false);
+            });
+            flasherButton.addEventListener("erasing-progress", (e) => {
+                progressBar.style.width = `${e.detail.percentage}%`;
+                statusLabel.textContent = `Стирание... ${e.detail.percentage}%`;
+                statusLabel.className = 'text-lg font-medium text-yellow-400';
+            });
+
+            // --- Проверка совместимости браузера ---
+            if ("serial" in navigator) {
+                document.getElementById('compatibility-check').innerHTML = `<p class="text-sm text-green-400 bg-green-900/50 p-3 rounded-lg">Ваш браузер совместим с ESP Web Tools.</p>`;
+            } else {
+                 document.getElementById('compatibility-check').innerHTML = `<p class="text-sm text-yellow-400 bg-yellow-900/50 p-3 rounded-lg">Ваш браузер не поддерживает Web Serial API. Используйте Google Chrome или Microsoft Edge.</p>`;
+                 flasherButton.querySelector('button').disabled = true;
+            }
+
+            // --- Анимация при скролле ---
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('fade-in-visible');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1 });
+            document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+            // --- Логика мобильного меню ---
+            mobileMenuButton.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+            mobileMenu.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', () => mobileMenu.classList.add('hidden'));
+            });
+
+             // --- Подсветка активного пункта меню при скролле ---
+            const sections = document.querySelectorAll('main section');
+            const navLinks = document.querySelectorAll('.nav-link');
+            window.addEventListener('scroll', () => {
+                let currentId = '';
+                sections.forEach(section => {
+                    if (window.scrollY >= section.offsetTop - 100) {
+                        currentId = section.getAttribute('id');
+                    }
+                });
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href') === `#${currentId}`) {
+                        link.classList.add('active');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+
